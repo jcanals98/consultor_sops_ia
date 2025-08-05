@@ -4,3 +4,4 @@ openai
 qdrant-client
 pymupdf
 python-dotenv
+python-multipart
