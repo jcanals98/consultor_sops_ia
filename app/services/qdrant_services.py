@@ -4,6 +4,7 @@ from qdrant_client import QdrantClient
 from qdrant_client.http.models import PointStruct, Distance, VectorParams
 import os
 from dotenv import load_dotenv
+from openai import OpenAI
 
 load_dotenv()
 
@@ -45,3 +46,24 @@ def insertar_embeddings(chunks: list[str], embeddings: list[list[float]]):
         collection_name=NOMBRE_COLECCION,
         points=puntos
     )
+
+def buscar_fragmentos_similares(pregunta: str, top_k: int = 3) -> list[str]:
+    """
+    Genera el embedding de la pregunta y devuelve los fragmentos más relevantes desde Qdrant.
+    """
+    cliente = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+    respuesta = cliente.embeddings.create(
+        input=pregunta,
+        model="text-embedding-3-small"
+    )
+    vector = respuesta.data[0].embedding
+
+    resultados = qdrant.search(
+        collection_name=NOMBRE_COLECCION,
+        query_vector=vector,
+        limit=top_k
+    )
+
+    # Extraemos solo el texto del payload
+    return [resultado.payload["texto"] for resultado in resultados]
